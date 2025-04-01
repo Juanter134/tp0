@@ -24,11 +24,19 @@ int main(void)
 
 	config = iniciar_config();
 
+	if(config_has_property (config, "CLAVE")){
+		log_info(logger,"El valor de CLAVE es: %s", config_get_string_value(config, "CLAVE"));
+    } else {
+        log_error(logger, "Error al leer el archivo de configuración o clave inexistente");
+	}
 	// Usando el config creado previamente, leemos los valores del config y los 
 	// dejamos en las variables 'ip', 'puerto' y 'valor'
 
 	// Loggeamos el valor de config
-
+	if (config != NULL) {
+        config_destroy(config); 
+    }
+	log_destroy(logger);
 
 	/* ---------------- LEER DE CONSOLA ---------------- */
 
@@ -56,12 +64,28 @@ t_log* iniciar_logger(void)
 {
 	t_log* nuevo_logger;
 
+	nuevo_logger = log_create ("tp0.log", "nuevo_logger", true, LOG_LEVEL_INFO);
+
+	if (nuevo_logger == NULL) {
+        printf("Error al crear el logger\n");
+        return NULL;
+    }
+
+	log_info (nuevo_logger, "Hola! Soy un log");
+
 	return nuevo_logger;
 }
 
 t_config* iniciar_config(void)
 {
 	t_config* nuevo_config;
+
+	nuevo_config = 	config_create ("cliente.config");
+
+	if (nuevo_config == NULL) {
+		
+        return NULL; 
+    }
 
 	return nuevo_config;
 }
