@@ -91,7 +91,7 @@ void leer_consola(t_log* logger)
 		leido = readline("> ");
 		log_info(logger, leido);
 
-		if (strcmp(leido, "")) {
+		if (!strcmp(leido, "")) {
 			free(leido);
 			break;
 		}
