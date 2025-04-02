@@ -25,7 +25,8 @@ int main(void)
 	config = iniciar_config();
 
 	if(config_has_property (config, "CLAVE")){
-		log_info(logger,"El valor de CLAVE es: %s", config_get_string_value(config, "CLAVE"));
+		valor = config_get_string_value(config, "CLAVE");
+		log_info(logger,"El valor de CLAVE es: %s", valor);
     } else {
         log_error(logger, "Error al leer el archivo de configuración o clave inexistente");
 	}
@@ -46,6 +47,22 @@ int main(void)
 	conexion = crear_conexion(ip, puerto);
 
 	// Enviamos al servidor el valor de CLAVE como mensaje
+	bool res = realizar_handshake(conexion, logger);
+	if(res){
+		size_t bytes;
+
+		int32_t result;
+
+		bytes = send(conexion, valor, strnlen(valor, 10) + 1, 0);
+		bytes = recv(conexion, &result, sizeof(int32_t), MSG_WAITALL);
+
+		if(result == 0){
+			log_info(logger, "Mensaje enviado con éxito");
+		}
+		else {
+			log_error(logger, "Error al enviar el mensaje");
+		}
+	}
 
 	// Armamos y enviamos el paquete
 	paquete(conexion);
@@ -101,12 +118,27 @@ void leer_consola(t_log* logger)
 
 	// El resto, las vamos leyendo y logueando hasta recibir un string vacío
 	
-	
-	
-
-    
 	// ¡No te olvides de liberar las lineas antes de regresar!
 	
+}
+
+bool realizar_handshake(int conexion, t_log* logger){
+	size_t bytes;
+
+	int32_t handshake = 1;
+	int32_t result;
+
+	bytes = send(conexion, &handshake, sizeof(int32_t), 0);
+	bytes = recv(conexion, &result, sizeof(int32_t), MSG_WAITALL);
+
+	if(result == 0){
+		log_info(logger, "Handshake realizado con éxito");
+		return true;
+	}
+	else {
+		log_error(logger, "Error al realizar el handshake");
+		return false;
+	}
 }
 
 void paquete(int conexion)
@@ -126,6 +158,7 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
 	config_destroy(config); 
 	log_destroy(logger);
+	free(conexion);
 	/* Y por ultimo, hay que liberar lo que utilizamos (conexion, log y config) 
 	  con las funciones de las commons y del TP mencionadas en el enunciado */
 }

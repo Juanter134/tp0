@@ -15,6 +15,8 @@ t_log* iniciar_logger(void);
 t_config* iniciar_config(void);
 void leer_consola(t_log*);
 void paquete(int);
+bool realizar_handshake(int, t_log*);
 void terminar_programa(int, t_log*, t_config*);
+
 
 #endif /* CLIENT_H_ */
