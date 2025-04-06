@@ -30,7 +30,7 @@ int main(void)
     } else {
         log_error(logger, "Error al leer el archivo de configuración");
 	}
-	
+
 	// Usando el config creado previamente, leemos los valores del config y los 
 	// dejamos en las variables 'ip', 'puerto' y 'valor'
 	if(config_has_property (config, "PUERTO")){
@@ -156,5 +156,5 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
 	config_destroy(config); 
 	log_destroy(logger);
-	close(conexion);
+	liberar_conexion(conexion);
 }
