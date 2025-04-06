@@ -28,11 +28,19 @@ int main(void)
 		valor = config_get_string_value(config, "CLAVE");
 		log_info(logger,"El valor de CLAVE es: %s", valor);
     } else {
-        log_error(logger, "Error al leer el archivo de configuración o clave inexistente");
+        log_error(logger, "Error al leer el archivo de configuración");
 	}
+	
 	// Usando el config creado previamente, leemos los valores del config y los 
 	// dejamos en las variables 'ip', 'puerto' y 'valor'
-
+	if(config_has_property (config, "PUERTO")){
+		puerto = config_get_string_value(config, "PUERTO");
+		log_info(logger,"El valor de PUERTO es: %s", puerto);
+	}
+	if(config_has_property (config, "IP")){
+		ip = config_get_string_value(config, "IP");
+		log_info(logger,"El valor de IP es: %s", ip);
+	}
 	// Loggeamos el valor de config
 
 	/* ---------------- LEER DE CONSOLA ---------------- */
@@ -41,27 +49,13 @@ int main(void)
 
 	/*---------------------------------------------------PARTE 3-------------------------------------------------------------*/
 
-	// ADVERTENCIA: Antes de continuar, tenemos que asegurarnos que el servidor esté corriendo para poder conectarnos a él
-
 	// Creamos una conexión hacia el servidor
 	conexion = crear_conexion(ip, puerto);
 
 	// Enviamos al servidor el valor de CLAVE como mensaje
 	bool res = realizar_handshake(conexion, logger);
 	if(res){
-		size_t bytes;
-
-		int32_t result;
-
-		bytes = send(conexion, valor, strnlen(valor, 10) + 1, 0);
-		bytes = recv(conexion, &result, sizeof(int32_t), MSG_WAITALL);
-
-		if(result == 0){
-			log_info(logger, "Mensaje enviado con éxito");
-		}
-		else {
-			log_error(logger, "Error al enviar el mensaje");
-		}
+		enviar_mensaje(valor, conexion);
 	}
 
 	// Armamos y enviamos el paquete
@@ -103,7 +97,6 @@ void leer_consola(t_log* logger)
 {
 	char* leido;
 
-	// La primera te la dejo de yapa
 	while (true){
 		leido = readline("> ");
 		log_info(logger, leido);
@@ -116,10 +109,6 @@ void leer_consola(t_log* logger)
 		free(leido);
 	}
 
-	// El resto, las vamos leyendo y logueando hasta recibir un string vacío
-	
-	// ¡No te olvides de liberar las lineas antes de regresar!
-	
 }
 
 bool realizar_handshake(int conexion, t_log* logger){
@@ -143,14 +132,23 @@ bool realizar_handshake(int conexion, t_log* logger){
 
 void paquete(int conexion)
 {
-	// Ahora toca lo divertido!
 	char* leido;
-	t_paquete* paquete;
+	t_paquete* paquete = crear_paquete();
 
-	// Leemos y esta vez agregamos las lineas al paquete
+	while (true) {
+		leido = readline("> ");
 
+		if (!strcmp(leido, "")) {
+			free(leido);
+			break;
+		}
 
-	// ¡No te olvides de liberar las líneas y el paquete antes de regresar!
+		agregar_a_paquete(paquete, leido, strlen(leido) + 1);
+		free(leido);
+	}
+
+	enviar_paquete(paquete, conexion); 
+	eliminar_paquete(paquete);
 	
 }
 
@@ -158,7 +156,5 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
 	config_destroy(config); 
 	log_destroy(logger);
-	free(conexion);
-	/* Y por ultimo, hay que liberar lo que utilizamos (conexion, log y config) 
-	  con las funciones de las commons y del TP mencionadas en el enunciado */
+	close(conexion);
 }
